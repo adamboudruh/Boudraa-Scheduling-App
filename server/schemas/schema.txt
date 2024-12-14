@@ -1,0 +1,70 @@
+dbdiagram.io code for a vizualization of the database structure
+
+table Schedule {
+  id integer [primary key]
+  week_of date // date of the sunday 
+  shifts array // array of shift IDs
+}
+
+table dayAvailability {
+  id integer [primary key]
+  start_time integer // 0 to 24
+  end_time integer 
+}
+
+Table weekAvailability {
+  id integer [primary key]
+  sunday integer
+  monday integer
+  tuesday integer
+  wednesday integer
+  thursday integer
+  friday integer
+  saturday integer
+}
+
+Table departments {
+  id integer [primary key]
+  name varchar
+  managers array
+
+}
+
+Table users {
+  id integer [primary key]
+  employee_id integer
+  username varchar
+  password varchar
+  manager bool
+}
+
+Table employees {
+  id integer [primary key]
+  name varchar
+  title varchar
+  manager_id integer
+  department_id integer
+  availablity_id integer
+}
+
+Table shift {
+  id integer [primary key]
+  day integer // int 1-7 to indicate which day of the week its for
+  start_time double // 0 to 24, can have a .5
+  end_time double // 0 to 24
+  schedule 
+
+}
+
+Ref: users.employee_id > employees.id // one-to-one
+Ref: employees.department_id > departments.id // many-to-one
+Ref: employees.availablity_id > weekAvailability.id // one-to-one
+
+Ref: weekAvailability.sunday > dayAvailability.id
+Ref: weekAvailability.monday > dayAvailability.id
+Ref: weekAvailability.tuesday > dayAvailability.id
+Ref: weekAvailability.wednesday > dayAvailability.id
+Ref: weekAvailability.thursday > dayAvailability.id
+Ref: weekAvailability.friday > dayAvailability.id
+Ref: weekAvailability.saturday > dayAvailability.id
+

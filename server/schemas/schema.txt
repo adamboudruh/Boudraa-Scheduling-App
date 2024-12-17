@@ -23,9 +23,15 @@ Table department {
   manager_id integer // userID of creator
 }
 
-Table storeHours {
+Table store_hours {
   id integer [primary key]
+  days array
   department_id integer // References department.id
+}
+
+Table day_hours {
+  id integer [primary key]
+  store_hours_id integer
   day integer // 1-7 to indicate day of week
   open_time time // Opening time
   close_time time // Closing time

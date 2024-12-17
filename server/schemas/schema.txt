@@ -1,47 +1,48 @@
-dbdiagram.io code for a vizualization of the database structure
-
-table Schedule {
+table schedule {
   id integer [primary key]
   week_of date // date of the sunday 
   shifts array // array of shift IDs
+  manager_id integer // userID of creator
 }
 
 table dayAvailability {
   id integer [primary key]
-  start_time integer // 0 to 24
-  end_time integer 
+  day integer // 1-7 to indicate day of week
+  start_time time
+  end_time time 
 }
 
 Table weekAvailability {
   id integer [primary key]
-  sunday integer
-  monday integer
-  tuesday integer
-  wednesday integer
-  thursday integer
-  friday integer
-  saturday integer
+  days array [] // 7 day objects to indicate availability time for each day
 }
 
-Table departments {
+Table department {
   id integer [primary key]
   name varchar
-  managers array
-
+  manager_id integer // userID of creator
 }
 
-Table users {
+Table storeHours {
   id integer [primary key]
-  employee_id integer
+  department_id integer // References department.id
+  day integer // 1-7 to indicate day of week
+  open_time time // Opening time
+  close_time time // Closing time
+}
+
+Table user {
+  id integer [primary key]
   username varchar
   password varchar
-  manager bool
 }
 
-Table employees {
+Table employee {
   id integer [primary key]
   name varchar
   title varchar
+  desired_hours integer // 8 to 40 weekly hours
+  wage double // rounded to two decimals
   manager_id integer
   department_id integer
   availablity_id integer
@@ -52,19 +53,18 @@ Table shift {
   day integer // int 1-7 to indicate which day of the week its for
   start_time double // 0 to 24, can have a .5
   end_time double // 0 to 24
-  schedule 
-
+  schedule_id integer
+  employee_id integer
 }
 
-Ref: users.employee_id > employees.id // one-to-one
-Ref: employees.department_id > departments.id // many-to-one
-Ref: employees.availablity_id > weekAvailability.id // one-to-one
+Ref: storeHours.department_id > department.id // many-to-one
+Ref: employee.department_id > department.id // many-to-one
+Ref: employee.availablity_id > weekAvailability.id // one-to-one
+Ref: schedule.shifts > shift.id // one-to-many
+Ref: employee.manager_id > user.id
+Ref: shift.employee_id > employee.id
+Ref: department.manager_id > user.id
+Ref: schedule.manager_id > user.id
+Ref: weekAvailability.days > dayAvailability.id
 
-Ref: weekAvailability.sunday > dayAvailability.id
-Ref: weekAvailability.monday > dayAvailability.id
-Ref: weekAvailability.tuesday > dayAvailability.id
-Ref: weekAvailability.wednesday > dayAvailability.id
-Ref: weekAvailability.thursday > dayAvailability.id
-Ref: weekAvailability.friday > dayAvailability.id
-Ref: weekAvailability.saturday > dayAvailability.id
-
+// add ability to copy schedule for another week

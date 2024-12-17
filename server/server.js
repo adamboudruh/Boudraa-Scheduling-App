@@ -6,7 +6,7 @@ const { authMiddleware } = require('./utils/auth');
 // DB schemas and connections
 const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
-
+// Gets port from .env file or defaults to 3001
 const PORT = process.env.PORT || 3001;
 const app = express();
 const server = new ApolloServer({

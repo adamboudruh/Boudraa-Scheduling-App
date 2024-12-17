@@ -1,7 +1,7 @@
 // Shift Model
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const { timeSlotSchema } = require('./TimeSlot')
+const timeSlotSchema = require('./TimeSlot')
 
 const employeeSchema = new Schema({
   // Indicates which day of the week 1-7
@@ -44,8 +44,9 @@ const employeeSchema = new Schema({
         validator: (slots) => {
             const slotsByDay = groupSlotsByDay(slots);
             return checkOverlap(slotsByDay)
+        }
     }
-    }
+  }
 });
 
 // Groups slots into respective days

@@ -12,12 +12,12 @@ const timeSlotSchema = new Schema({
       }
     },
     //HH:MM Format
-    start_time: {
+    startTime: {
       type: String,
       required: true,
       match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format']
     },
-    end_time: {
+    endTime: {
       type: String,
       required: true,
       match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format']

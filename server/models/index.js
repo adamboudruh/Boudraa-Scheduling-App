@@ -1,6 +1,9 @@
-// Import and export the User, Instructor and Course models
+// Import and export the Department, Employee, Schedule, Shift, StoreHours, and User models
+const Department = require('./Department');
+const Employee = require('./Employee');
+const Schedule = require('./Schedule');
+const Shift = require('./Shift');
+const StoreHours = require('./StoreHours');
 const User = require('./User');
-const Instructor = require('./Instructor');
-const Course = require('./Course');
 
-module.exports = { User, Instructor, Course };
+module.exports = { Department, Employee, Schedule, Shift, StoreHours, User };

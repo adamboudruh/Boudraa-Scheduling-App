@@ -11,8 +11,7 @@ type User {
   lastName: String
   email: String
   password: String
-  instructors: [Instructor]
-  courses: [Course]
+  departments: [Department]
 }
 
 type Course {

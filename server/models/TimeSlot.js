@@ -24,6 +24,14 @@ const timeSlotSchema = new Schema({
     }
   });
 
+  // Returns the amount of hours that the slot spans
+  // Good for calculating shift lengths and weekly hours
+  timeSlotSchema.virtual('duration').get( () => {
+    const begin = new Date(`2000-01-01${this.startTime}:00Z`);
+    const end = new Date(`2000-01-01${this.startTime}:00Z`);
+    return ( (end - begin) / (1000*60*60) ) // Converts milliseconds to hours
+  })
+
   const TimeSlot = mongoose.model('timeslot', timeSlotSchema);
   
   module.exports = TimeSlot;

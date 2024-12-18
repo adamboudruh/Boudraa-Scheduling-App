@@ -32,11 +32,6 @@ const employeeSchema = new Schema({
     ref: 'user',
     required: true
   },
-  department: {
-    type: Schema.Types.ObjectId,
-    ref: 'department',
-    required: true
-  },
   availability: {
     type: [timeSlotSchema],
     // Check that slots do not overlap
@@ -67,8 +62,8 @@ const groupSlotsByDay = (slots) => {
           const slot1 = daySlots[i];
           const slot2 = daySlots[j];
           if (
-            (slot1.start_time < slot2.end_time && slot1.end_time > slot2.start_time) ||
-            (slot2.start_time < slot1.end_time && slot2.end_time > slot1.start_time)
+            (slot1.startTime < slot2.endTime && slot1.endTime > slot2.start_time) ||
+            (slot2.startTime < slot1.endTime && slot2.endTime > slot1.startTime)
           ) {
             return false;
           }

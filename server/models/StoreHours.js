@@ -14,10 +14,10 @@ const storeHoursSchema = new Schema({
       },
       message: 'dayHours must contain exactly 7 unique days.'
     },
-    department: {
-      type: Schema.Types.ObjectId,
-      ref: 'department'
-    },
+    // department: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'department'
+    // },
     manager: {
         type: Schema.Types.ObjectId,
         ref: 'user',
@@ -25,6 +25,7 @@ const storeHoursSchema = new Schema({
     },
   });
 
+  // Each user can only have one StoreHours object
 storeHoursSchema.pre('save', async function(next) {
     const err = new Error('error saving store hours');
     const storeHours = this;

@@ -6,39 +6,69 @@
 const typeDefs = `
 
 type User {
-  _id: ID
-  firstName: String
-  lastName: String
-  email: String
-  password: String
+  _id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  storeHours: StoreHours
+  schedules: [Schedule]
+  employees: [Employee]
   departments: [Department]
 }
 
-type Course {
-  _id: ID
-  title: String
-  schedule: String
-  price: Int
+type Department {
+  _id: ID!
+  name: String!
+  manager: User!
+}
+
+type Employee {
+  _id: ID!
+  firstName: String!
+  lastName: String!
+  wage: Number!
+  desiredHours: Int!
+  role: Role!
+  availability: [TimeSlot]
+  manager: User!
+}
+
+type Role {
+  _id: ID!
+  name: String!
   description: String
-  instructor: Instructor
-  thoughts: [Thought]
-  clients: [User]
+  manager: User!
 }
 
-type Instructor {
-  _id: ID
-  firstName: String
-  lastName: String
-  image: String
-  bio: String
-  courses: [Course]
-  clients: [User]
+type Schedule {
+  _id: ID!
+  weekOf: Date!
+  shifts: [Shift]
+  manager: User!
 }
 
-type Thought {
-  _id: ID
-  thoughtText: String
-  thoughtAuthor: String
+type Shift {
+  _id: ID!
+  slot: TimeSlot!
+  schedule: Schedule!
+  employee: Employee!
+  department: Department!
+  manager: User!
+  shiftLength: Float
+}
+
+type StoreHours {
+  _id: ID!
+  hours: [TimeSlot]
+  manager: User!
+}
+
+type TimeSlot {
+  day: Int!
+  startTime: String!
+  endTime: String!
+  duration: Float
 }
 
 type Auth {
@@ -47,12 +77,19 @@ type Auth {
   }
 
 type Query {
-  instructorById(id: ID): Instructor
-  courseById(courseId: ID): Course
-  instructors: [Instructor]
-  courses: [Course]
   users: [User]
-  user: User
+  user(id: ID!): User
+  departments(userId: ID!): [Department]
+  department(id: ID!): Department
+  employees(userId: ID!): [Employee]
+  employee(id: ID!): Employee
+  roles(userId: ID!): [Role]
+  role(id: ID!): Role
+  schedules(userId: ID!): [Schedule]
+  schedule(id: ID!): Schedule
+  shifts(userId: ID!): [Shift]
+  shift(id: ID!): Shift
+  storeHours(userId: ID!): StoreHours
 }
 
 type Mutation {
@@ -71,22 +108,123 @@ type Mutation {
     password: String!
   ):Auth
 
-  addThoughtToCourse(
-    courseId: ID!,
-    thoughtText: String!,
-    thoughtAuthor: String!
-  ): Course
+  deleteUser(
+    id: ID!
+  ): User
 
-  removeThoughtFromCourse(
-    courseId: ID!,
-    thoughtId: ID!
-  ): Course
+  addDepartment(
+      name: String!, 
+      manager: ID!
+    ): Department
 
-  updateThoughtInCourse(
-    courseId: ID!,
-    thoughtId: ID!,
-    updatedThought: String!
-  ): Course
+  updateDepartment(
+    id: ID!, 
+    name: String, 
+    manager: ID
+  ): Department
+
+  deleteDepartment(
+    id: ID!
+  ): Department
+
+  addEmployee(
+    firstName: String!, 
+    lastName: String!, 
+    wage: Float!, 
+    desiredHours: Int!, 
+    manager: ID!, 
+    role: ID!, 
+    availability: [TimeSlotInput]!
+  ): Employee
+
+  updateEmployee(
+    id: ID!, 
+    firstName: String, 
+    lastName: String, 
+    wage: Float, 
+    desiredHours: Int, 
+    manager: ID, 
+    role: ID, 
+    availability: [TimeSlotInput]
+  ): Employee
+
+  deleteEmployee(
+    id: ID!
+  ): Employee
+
+  addRole(
+    name: String!, 
+    description: String
+  ): Role
+
+  updateRole(
+    id: ID!, 
+    name: String, 
+    description: String
+  ): Role
+
+  deleteRole(
+    id: ID!
+  ): Role
+
+  addSchedule(
+    weekOf: String!, 
+    shifts: [ID]!, 
+    manager: ID!
+  ): Schedule
+
+  updateSchedule(
+    id: ID!, 
+    weekOf: String, 
+    shifts: [ID], 
+    manager: ID
+  ): Schedule
+
+  deleteSchedule(
+    id: ID!
+  ): Schedule
+
+  addShift(
+    slot: TimeSlotInput!, 
+    schedule: ID!, 
+    employee: ID!, 
+    department: ID!, 
+    manager: ID!
+  ): Shift
+
+  updateShift(
+    id: ID!, 
+    slot: TimeSlotInput, 
+    schedule: ID, 
+    employee: ID, 
+    department: ID, 
+    manager: ID
+  ): Shift
+
+  deleteShift(
+    id: ID!
+  ): Shift
+
+  addStoreHours(
+    hours: [TimeSlotInput]!, 
+    manager: ID!
+  ): StoreHours
+
+  updateStoreHours(
+    id: ID!, 
+    hours: [TimeSlotInput], 
+    manager: ID
+  ): StoreHours
+
+  deleteStoreHours(
+    id: ID!
+  ): StoreHours
+}
+
+input TimeSlotInput {
+  day: Int!
+  startTime: String!
+  endTime: String!
 }
 `;
 

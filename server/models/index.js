@@ -5,6 +5,7 @@ const Schedule = require('./Schedule');
 const Shift = require('./Shift');
 const StoreHours = require('./StoreHours');
 const User = require('./User');
-// const TimeSlot = require('./TimeSlot');
+const Role = require('./Role')
+const TimeSlot = require('./TimeSlot');
 
-module.exports = { Department, Employee, Schedule, Shift, StoreHours, User };
+module.exports = { Department, Employee, Schedule, Shift, StoreHours, User, Role, TimeSlot };

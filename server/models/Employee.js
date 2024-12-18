@@ -19,7 +19,7 @@ const employeeSchema = new Schema({
     set: (v) => parseFloat(v).toFixed(2) // Ensures 2 decimal places
   },
   // Desired weekly hours, 4-40
-  weeklyHours: {
+  desiredHours: {
     type: Number,
     required: true,
     validate: {
@@ -31,6 +31,10 @@ const employeeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'user',
     required: true
+  },
+  role: {
+    type: Schema.Types.ObjectId,
+    ref: 'role'
   },
   availability: {
     type: [timeSlotSchema],

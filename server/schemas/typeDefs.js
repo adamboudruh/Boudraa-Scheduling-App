@@ -5,6 +5,8 @@
 
 const typeDefs = `
 
+scalar Date
+
 type User {
   _id: ID!
   firstName: String!
@@ -53,7 +55,7 @@ type Shift {
   slot: TimeSlot!
   schedule: Schedule!
   employee: Employee!
-  department: Department!
+  department: Department
   manager: User!
   shiftLength: Float
 }
@@ -99,8 +101,6 @@ type Mutation {
     lastName: String!
     email: String!
     password: String!
-    instructors: [ID]
-    courses: [ID]  
   ): Auth
 
    login(
@@ -116,13 +116,7 @@ type Mutation {
       name: String!, 
       manager: ID!
     ): Department
-
-  updateDepartment(
-    id: ID!, 
-    name: String, 
-    manager: ID
-  ): Department
-
+  
   deleteDepartment(
     id: ID!
   ): Department
@@ -154,13 +148,8 @@ type Mutation {
 
   addRole(
     name: String!, 
-    description: String
-  ): Role
-
-  updateRole(
-    id: ID!, 
-    name: String, 
-    description: String
+    description: String,
+    manager: ID!
   ): Role
 
   deleteRole(
@@ -171,13 +160,6 @@ type Mutation {
     weekOf: String!, 
     shifts: [ID]!, 
     manager: ID!
-  ): Schedule
-
-  updateSchedule(
-    id: ID!, 
-    weekOf: String, 
-    shifts: [ID], 
-    manager: ID
   ): Schedule
 
   deleteSchedule(

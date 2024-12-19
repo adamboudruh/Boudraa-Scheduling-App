@@ -30,8 +30,7 @@ const shiftSchema = new Schema({
   },
   department: {
     type: Schema.Types.ObjectId,
-    ref: 'department',
-    required: true
+    ref: 'department'
   },
   manager: {
     type: Schema.Types.ObjectId,

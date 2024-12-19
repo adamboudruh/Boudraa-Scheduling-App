@@ -8,10 +8,7 @@ const scheduleSchema = new Schema({
     type: Date,
     required: true
   },
-  shifts: [{
-    type: Schema.Types.ObjectId,
-    ref: 'shift'
-  }],
+  shifts: [shiftSchema],
   manager: {
     type: Schema.Types.ObjectId,
     ref: 'user'

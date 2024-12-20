@@ -6,6 +6,6 @@ const Schedule = require('./Schedule');
 const StoreHours = require('./StoreHours');
 const User = require('./User');
 const Role = require('./Role')
-const TimeSlot = require('./TimeSlot');
+// const TimeSlot = require('./TimeSlot');
 
-module.exports = { Department, Employee, Schedule, StoreHours, User, Role, TimeSlot };
+module.exports = { Department, Employee, Schedule, StoreHours, User, Role };

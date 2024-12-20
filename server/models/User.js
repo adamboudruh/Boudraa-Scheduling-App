@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const bcrypt = require('bcrypt');
-const Instructor = require('./Instructor');
+// const Instructor = require('./Instructor');
 
 
 const userSchema = new Schema({
@@ -26,8 +26,7 @@ const userSchema = new Schema({
     type: String,
     required: true,
     minlength: 5
-  },
-  instructors: [Instructor.schema]
+  }
 });
 
 userSchema.pre('save', async function (next) {

@@ -32,6 +32,6 @@ const timeSlotSchema = new Schema({
     return ( (end - begin) / (1000*60*60) ) // Converts milliseconds to hours
   })
 
-  const TimeSlot = mongoose.model('timeslot', timeSlotSchema);
+  // const TimeSlot = mongoose.model('timeslot', timeSlotSchema);
   
-  module.exports = TimeSlot;
+  module.exports = timeSlotSchema;

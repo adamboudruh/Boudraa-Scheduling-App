@@ -29,7 +29,7 @@ type Employee {
   _id: ID!
   firstName: String!
   lastName: String!
-  wage: Number!
+  wage: Float!
   desiredHours: Int!
   role: Role!
   availability: [TimeSlot]
@@ -108,17 +108,13 @@ type Mutation {
     password: String!
   ):Auth
 
-  deleteUser(
-    id: ID!
-  ): User
-
   addDepartment(
-      name: String!, 
-      manager: ID!
-    ): Department
+    name: String!, 
+    manager: ID!
+  ): Department
   
   deleteDepartment(
-    id: ID!
+    _id: ID!
   ): Department
 
   addEmployee(
@@ -132,7 +128,7 @@ type Mutation {
   ): Employee
 
   updateEmployee(
-    id: ID!, 
+    _id: ID!, 
     firstName: String, 
     lastName: String, 
     wage: Float, 
@@ -143,7 +139,7 @@ type Mutation {
   ): Employee
 
   deleteEmployee(
-    id: ID!
+    _id: ID!
   ): Employee
 
   addRole(
@@ -153,38 +149,35 @@ type Mutation {
   ): Role
 
   deleteRole(
-    id: ID!
+    _id: ID!
   ): Role
 
   addSchedule(
-    weekOf: String!, 
-    shifts: [ID]!, 
+    weekOf: String!,
     manager: ID!
   ): Schedule
 
   deleteSchedule(
-    id: ID!
+    _id: ID!
   ): Schedule
 
   addShift(
-    slot: TimeSlotInput!, 
-    schedule: ID!, 
+    slot: TimeSlotInput,
     employee: ID!, 
-    department: ID!, 
-    manager: ID!
+    department: ID!
   ): Shift
 
   updateShift(
-    id: ID!, 
+    _id: ID!, 
     slot: TimeSlotInput, 
     schedule: ID, 
     employee: ID, 
-    department: ID, 
-    manager: ID
+    department: ID
   ): Shift
 
   deleteShift(
-    id: ID!
+    schedule: ID!
+    _id: ID!
   ): Shift
 
   addStoreHours(
@@ -193,13 +186,12 @@ type Mutation {
   ): StoreHours
 
   updateStoreHours(
-    id: ID!, 
-    hours: [TimeSlotInput], 
-    manager: ID
+    _id: ID!, 
+    hours: [TimeSlotInput]
   ): StoreHours
 
   deleteStoreHours(
-    id: ID!
+    _id: ID!
   ): StoreHours
 }
 

@@ -1,5 +1,5 @@
 // Import models and tokens (authenticate)
-const { Department, Employee, Schedule, StoreHours, User, Role, TimeSlot } = require('../models');
+const { Department, Employee, Schedule, StoreHours, User, Role } = require('../models');
 const { signToken, AuthenticationError } = require('../utils/auth');
 // const stripe = require('stripe')('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
 const { GraphQLScalarType, Kind } = require('graphql');
@@ -148,9 +148,9 @@ const resolvers = {
       }
     },
 
-    deleteDepartment: async (parent, { id }) => {
+    deleteDepartment: async (parent, { _id }) => {
       try {
-        return await Department.findOneAndDelete({ id });
+        return await Department.findOneAndDelete({ _id });
       }
       catch (error) {
         throw new Error('Error adding department');
@@ -159,87 +159,143 @@ const resolvers = {
 
     addEmployee: async (parent, { firstName, lastName, wage, desiredHours, role, availability, manager }) => {
       try {
-        return await Employee.create({  });
+        return await Employee.create({ firstName, lastName, wage, desiredHours, role, availability, manager });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error adding employee');
       }
     },
 
-    updateEmployee: async (parent, { id, firstName, lastName, wage, desiredHours, role, availability, manager }) => {
+    updateEmployee: async (parent, { _id, firstName, lastName, wage, desiredHours, role, availability, manager }) => {
       try {
-        return await Employee.findByIdAndUpdate({ id, firstName, lastName, wage, desiredHours, role, availability, manager });
+        return await Employee.findOneAndUpdate({ _id }, { firstName, lastName, wage, desiredHours, role, availability, manager });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error updating employee info');
       }
     },
 
-    deleteEmployee: async (parent, { id }) => {
+    deleteEmployee: async (parent, { _id }) => {
       try {
-        return await Employee.findOneAndDelete({ id });
+        return await Employee.findOneAndDelete({ _id });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error deleting employee');
       }
     },
 
     addRole: async (parent, { name, description, manager }) => {
       try {
-        return await Employee.create({ name, description, manager });
+        return await Role.create({ name, description, manager });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error adding role');
       }
     },
 
     deleteRole: async (parent, { _id }) => {
       try {
-        return await Employee.create({ _id });
+        return await Role.findOneAndDelete({ _id });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error deleting role');
       }
     },
 
-    updateEmployee: async (parent, { id, firstName, lastName, wage, desiredHours, role, availability, manager }) => {
+    // weekOf will be an ISO string
+    addSchedule: async (parent, { weekISO, manager }) => {
       try {
-        return await Employee.findByIdAndUpdate({  });
+        shifts = []
+        weekOf = dateScalar.parseValue(weekISO)
+        return await Schedule.create({ weekOf, shifts, manager });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error adding schedule');
       }
     },
 
-    // Add and remove thoughts to courses //
-    addThoughtToCourse: async (parent, { courseId, thoughtText, thoughtAuthor }) => {
-      return Course.findOneAndUpdate(
-        { _id: courseId },
-        { $addToSet: { thoughts: { thoughtText, thoughtAuthor } }, },
-        { new: true, }
-      );
+    deleteSchedule: async (parent, { _id }) => {
+      try {
+        return await Schedule.findOneAndDelete({ _id });
+      }
+      catch (error) {
+        throw new Error('Error deleting schedule');
+      }
     },
 
-    removeThoughtFromCourse: async (parent, { courseId, thoughtId }) => {
-      return Course.findOneAndUpdate(
-        { _id: courseId },
-        { $pull: { thoughts: { _id: thoughtId } } },
-        { new: true }
-      );
+    addShift: async (parent, { slot, schedule, employee, department }) => {
+      try {
+        return Schedule.findOneAndUpdate(
+          { _id: schedule },
+          { $addToSet: { 
+            shifts: { 
+              slot, schedule, employee, department
+            } }, },
+          { new: true, }
+        );
+      }
+      catch (error) {
+        throw new Error('Error adding shift');
+      }
     },
 
-    updateThoughtInCourse: async (parent, { courseId, thoughtId, updatedThought }) => {
-      const updatedCourse = await Course.findOneAndUpdate(
-        { _id: courseId, "thoughts._id": thoughtId },
-        {
-          $set: {
-            "thoughts.$.thoughtText": updatedThought,
-          },
-        },
-        { new: true }
-      );
-      return updatedCourse;
+    updateShift: async (parent, { slot, _id , schedule, employee, department }) => {
+      try {
+        // This one I have to think about. How do I handle the TimeSlotInput, because the frontend can't like make a timeslot object, all it can do is feed me a start and end Time.
+        return Schedule.findOneAndUpdate(
+          { _id: schedule, "shifts._id": _id },
+          { $addToSet: { 
+            shifts: { 
+              slot, schedule, employee, department
+            } }, },
+          { new: true, }
+        );
+      }
+      catch (error) {
+        throw new Error('Error updating shift');
+      }
     },
+
+    deleteShift: async (parent, { schedule, _id }) => {
+      try {
+        return await Schedule.findOneAndUpdate(
+          { _id: schedule },
+          { $pull: { shifts: { _id } } },
+          { new: true }
+        );
+      } catch (error) {
+        throw new Error('Error deleting shift');
+      }
+    },
+
+    addStoreHours: async (parent, { hours, manager }) => {
+      try {
+        return await StoreHours.create({ hours, manager });
+      }
+      catch (error) {
+        throw new Error('Error adding employee');
+      }
+    },
+
+    updateStoreHours: async (parent, { _id, hours }) => {
+      try {
+        return await StoreHours.findOneAndUpdate({ _id }, { hours });
+      }
+      catch (error) {
+        throw new Error('Error adding employee');
+      }
+    },
+
+    deleteStoreHours: async (parent, { _id }) => {
+      try {
+        return await StoreHours.findOneAndDelete({ _id });
+      }
+      catch (error) {
+        throw new Error('Error deleting employee');
+      }
+    },
+
+    
   }
 };
 

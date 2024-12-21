@@ -9,11 +9,11 @@ const expiration = '2h';
 // Export Middleware function that checks and verifies JWT tokens
 // Also signs new JWT with user specific data for authentication 
 module.exports = {
-  AuthenticationError: new GraphQLError('Could not authenticate user.', {
-    extensions: {
-      code: 'UNAUTHENTICATED',
-    },
-  }),
+  // AuthenticationError: new GraphQLError('Could not authenticate user.', {
+  //   extensions: {
+  //     code: 'UNAUTHENTICATED',
+  //   },
+  // }),
   authMiddleware: function ({ req }) {
     // allows token to be sent via req.body, req.query, or headers
     let token = req.body.token || req.query.token || req.headers.authorization;

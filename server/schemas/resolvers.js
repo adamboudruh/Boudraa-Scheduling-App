@@ -101,7 +101,7 @@ const resolvers = {
       try {
         return await Schedule.find({ manager: userId }).populate('shifts');
       } catch (error) {
-        throw new Error('Error fetching schedules');
+        throw new Error('Error fetching schedules: '+error.message);
       }
     },
     schedule: async (parent, { id }) => {
@@ -117,20 +117,6 @@ const resolvers = {
         throw new Error('Error fetching schedule: '+error.message);
       }
     },
-    // shifts: async (parent, { userId }) => {
-    //   try {
-    //     return await Shift.find({ manager: userId }).populate('slot').populate('employee').populate('department').populate('manager');
-    //   } catch (error) {
-    //     throw new Error('Error fetching shifts');
-    //   }
-    // },
-    // shift: async (parent, { id }) => {
-    //   try {
-    //     return await Shift.findById(id).populate('slot').populate('employee').populate('department').populate('manager');
-    //   } catch (error) {
-    //     throw new Error('Error fetching shift');
-    //   }
-    // },
     storeHours: async (parent, { userId }) => {
       try {
         storeHours = await StoreHours.findOne({ manager: userId }).populate('dayHours').populate('manager');
@@ -143,14 +129,14 @@ const resolvers = {
 
   User: {
     schedules: async (parent) => {
-      try { return await Schedule.findById(id).populate({
+      try { return await Schedule.find({ manager: parent._id }).populate({
         path: 'shifts',
         populate: {
           path: 'employee',
           model: 'employee'
         }
       }); }
-      catch (error) { throw new Error('Error fetching schedules'); }
+      catch (error) { throw new Error('Error fetching schedules: '+error.message); }
     },
     storeHours: async (parent) => {
       try { return await StoreHours.findOne({ manager: parent._id }); }
@@ -168,7 +154,7 @@ const resolvers = {
       try { 
         employees = await Employee.find({ manager: parent._id }).populate('role');
         console.log(employees);
-        return  }
+        return employees }
       catch (error) { throw new Error('Error fetching employees: '+error.message); }
     }
   },

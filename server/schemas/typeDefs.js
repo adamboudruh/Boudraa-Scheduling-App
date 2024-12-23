@@ -90,8 +90,6 @@ type Query {
   role(id: ID!): Role
   schedules(userId: ID!): [Schedule]
   schedule(id: ID!): Schedule
-  shifts(userId: ID!): [Shift]
-  shift(id: ID!): Shift
   storeHours(userId: ID!): StoreHours
 }
 

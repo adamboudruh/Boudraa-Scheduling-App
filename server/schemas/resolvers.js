@@ -9,9 +9,10 @@ const { GraphQLScalarType, Kind } = require('graphql');
 const dateScalar = new GraphQLScalarType({
   name: 'Date',
   description: 'Custom Date scalar type',
-  // Converts outgoing Date to inte
+  // Converts outgoing Date to ISOString
   serialize(value) {
-    return value instanceof Date ? value.toISOString() : null;
+    if (value instanceof Date) return value.toISOString();
+    else return null;
   },
   parseValue(value) {
     // Convert incoming ISOString to Date
@@ -42,6 +43,15 @@ const resolvers = {
       }
       else throw new AuthenticationError('Please log in to view that info');
     },
+    userById: async (parent, { userId }) => {
+      try {
+        console.log(userId);
+        user = await User.findById(userId);
+        return user;
+      } catch (error) {
+        throw new Error('Error fetching departments');
+      }
+    },
     departments: async (parent, { userId }) => {
       try {
         return await Department.find({ manager: userId });
@@ -51,6 +61,7 @@ const resolvers = {
     },
     department: async (parent, { id }) => {
       try {
+        console.log()
         return await Department.findById(id).populate('manager');
       } catch (error) {
         throw new Error('Error fetching department');
@@ -58,9 +69,11 @@ const resolvers = {
     },
     employees: async (parent, { userId }) => {
       try {
+        employees = await Employee.find({ manager: userId });
+        console.log(employees);
         return await Employee.find({ manager: userId }).populate('role');
       } catch (error) {
-        throw new Error('Error fetching employees');
+        throw new Error('Error fetching employees: '+error.message);
       }
     },
     employee: async (parent, { id }) => {
@@ -93,31 +106,70 @@ const resolvers = {
     },
     schedule: async (parent, { id }) => {
       try {
-        return await Schedule.findById(id).populate('shifts').populate('manager');
+        return await Schedule.findById(id).populate({
+          path: 'shifts',
+          populate: {
+            path: 'employee',
+            model: 'employee'
+          }
+        });;
       } catch (error) {
-        throw new Error('Error fetching schedule');
+        throw new Error('Error fetching schedule: '+error.message);
       }
     },
-    shifts: async (parent, { userId }) => {
-      try {
-        return await Shift.find({ manager: userId }).populate('slot').populate('employee').populate('department').populate('manager');
-      } catch (error) {
-        throw new Error('Error fetching shifts');
-      }
-    },
-    shift: async (parent, { id }) => {
-      try {
-        return await Shift.findById(id).populate('slot').populate('employee').populate('department').populate('manager');
-      } catch (error) {
-        throw new Error('Error fetching shift');
-      }
-    },
+    // shifts: async (parent, { userId }) => {
+    //   try {
+    //     return await Shift.find({ manager: userId }).populate('slot').populate('employee').populate('department').populate('manager');
+    //   } catch (error) {
+    //     throw new Error('Error fetching shifts');
+    //   }
+    // },
+    // shift: async (parent, { id }) => {
+    //   try {
+    //     return await Shift.findById(id).populate('slot').populate('employee').populate('department').populate('manager');
+    //   } catch (error) {
+    //     throw new Error('Error fetching shift');
+    //   }
+    // },
     storeHours: async (parent, { userId }) => {
       try {
-        return await StoreHours.find({ manager: userId }).populate('hours').populate('manager');
+        storeHours = await StoreHours.findOne({ manager: userId }).populate('dayHours').populate('manager');
+        return storeHours;
       } catch (error) {
-        throw new Error('Error fetching store hours');
+        throw new Error('Error fetching store hours: '+error.message);
       }
+    }
+  },
+
+  User: {
+    schedules: async (parent) => {
+      try { return await Schedule.findById(id).populate({
+        path: 'shifts',
+        populate: {
+          path: 'employee',
+          model: 'employee'
+        }
+      }); }
+      catch (error) { throw new Error('Error fetching schedules'); }
+    },
+    storeHours: async (parent) => {
+      try { return await StoreHours.findOne({ manager: parent._id }); }
+      catch (error) { throw new Error('Error fetching stpre hours'); }
+    },
+    roles: async (parent) => {
+      try { return await Role.find({ manager: parent._id }); }
+      catch (error) { throw new Error('Error fetching roles'); }
+    },
+    departments: async (parent) => {
+      try { return await Department.find({ manager: parent._id }); }
+      catch (error) { throw new Error('Error fetching departments'); }
+    },
+    employees: async (parent) => {
+      try { 
+        employees = await Employee.find({ manager: parent._id }).populate('role');
+        console.log(employees);
+        return  }
+      catch (error) { throw new Error('Error fetching employees: '+error.message); }
     }
   },
 
@@ -146,7 +198,7 @@ const resolvers = {
         return await Department.create({ name, manager });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error adding department: ' , error.message);
       }
     },
 
@@ -155,16 +207,20 @@ const resolvers = {
         return await Department.findOneAndDelete({ _id });
       }
       catch (error) {
-        throw new Error('Error adding department');
+        throw new Error('Error adding department ' + error.message);
       }
     },
 
     addEmployee: async (parent, { firstName, lastName, wage, desiredHours, role, availability, manager }) => {
       try {
+        console.log("Adding employee...");
+        console.log(`${firstName} ${lastName} ${wage} ${desiredHours} ${role} ${availability[0].day} ${manager} `)
         return await Employee.create({ firstName, lastName, wage, desiredHours, role, availability, manager });
       }
       catch (error) {
-        throw new Error('Error adding employee');
+        console.error('Error adding employee:', error.message);
+        console.error(error.stack);
+        throw new Error(`Error adding employee: ${error.message}`);
       }
     },
 
@@ -173,7 +229,7 @@ const resolvers = {
         return await Employee.findOneAndUpdate({ _id }, { firstName, lastName, wage, desiredHours, role, availability, manager });
       }
       catch (error) {
-        throw new Error('Error updating employee info');
+        throw new Error('Error updating employee info ' , error.message);
       }
     },
 
@@ -182,7 +238,7 @@ const resolvers = {
         return await Employee.findOneAndDelete({ _id });
       }
       catch (error) {
-        throw new Error('Error deleting employee');
+        throw new Error('Error deleting employee ' , error.message);
       }
     },
 
@@ -191,7 +247,7 @@ const resolvers = {
         return await Role.create({ name, description, manager });
       }
       catch (error) {
-        throw new Error('Error adding role');
+        throw new Error('Error adding role ' , error.message);
       }
     },
 
@@ -200,7 +256,7 @@ const resolvers = {
         return await Role.findOneAndDelete({ _id });
       }
       catch (error) {
-        throw new Error('Error deleting role');
+        throw new Error('Error deleting role ' , error.message);
       }
     },
 
@@ -208,11 +264,15 @@ const resolvers = {
     addSchedule: async (parent, { weekISO, manager }) => {
       try {
         shifts = []
-        weekOf = dateScalar.parseValue(weekISO)
+        console.log("ISO: "+weekISO);
+        weekOf = dateScalar.parseValue(weekISO);
+        console.log("Date object: "+weekOf);
         return await Schedule.create({ weekOf, shifts, manager });
       }
       catch (error) {
-        throw new Error('Error adding schedule');
+        console.error('Error adding schedule:', error.message);
+        console.error(error.stack);
+        throw new Error(`Error adding schedule: ${error.message}`);
       }
     },
 
@@ -225,19 +285,35 @@ const resolvers = {
       }
     },
 
-    addShift: async (parent, { slot, schedule, employee, department }) => {
+    addShift: async (parent, { timeSlot, schedule, employee, department }) => {
       try {
-        return Schedule.findOneAndUpdate(
+        availabilityError = new Error('Employee not available in the provided timeSlot');
+        invalidSlot = new Error('Invalid timeSlot');
+        shiftOverlap = new Error('Employee cannot work more than one shift per day');
+
+        // Check if employee is available
+          if (await availabilityCheck(employee, timeSlot)) console.log("Employee available yayyy");
+          else throw availabilityError;
+        // Check valid timeslot
+          if (await timeSlotCheck(timeSlot)) console.log("Valid timeslot. Booyah!");
+          else throw invalidSlot;
+        // Check if shift overlaps
+          if (await overlapCheck(employee, schedule, timeSlot)) console.log("No overlaps, nicely done");
+          else throw shiftOverlap;
+
+        schedule = await Schedule.findOneAndUpdate(
           { _id: schedule },
           { $addToSet: { 
             shifts: { 
-              slot, schedule, employee, department
+              timeSlot, schedule, employee, department
             } }, },
           { new: true, }
         );
+        // Return shift that was just created from the shifts array within the schedule
+        return schedule.shifts[schedule.shifts.length - 1];
       }
       catch (error) {
-        throw new Error('Error adding shift');
+        throw new Error('Error adding shift: '+error.message);
       }
     },
 
@@ -270,23 +346,25 @@ const resolvers = {
       }
     },
 
-    addStoreHours: async (parent, { hours, manager }) => {
+    addStoreHours: async (parent, { dayHours, manager }) => {
       try {
-        return await StoreHours.create({ hours, manager });
+        return await StoreHours.create({ dayHours, manager });
       }
       catch (error) {
-        throw new Error('Error adding employee');
+        console.error('Error adding storehours:', error.message);
+        console.error(error.stack);
+        throw new Error(`Error adding storehours: ${error.message}`);
       }
     },
 
-    updateStoreHours: async (parent, { _id, hours }) => {
-      try {
-        return await StoreHours.findOneAndUpdate({ _id }, { hours });
-      }
-      catch (error) {
-        throw new Error('Error adding employee');
-      }
-    },
+    // updateStoreHours: async (parent, { _id, dayHours }) => {
+    //   try {
+    //     return await StoreHours.findOneAndUpdate({ _id }, { dayHours });
+    //   }
+    //   catch (error) {
+    //     throw new Error('Error adding employee');
+    //   }
+    // },
 
     deleteStoreHours: async (parent, { _id }) => {
       try {
@@ -300,5 +378,41 @@ const resolvers = {
     
   }
 };
+
+availabilityCheck = async ( employee, timeSlot ) => {
+  // Retrieve employee's data
+    const shiftDay = timeSlot.day;
+    const employeeObject = await Employee.findById(employee);
+    if (!employeeObject) throw new Error('Employee not found');
+    console.log("Adding shift for: "+employeeObject.firstName);
+
+  // Retrieves all the availability timeslots for that specific employee on that day and puts in the array
+    const availabilitySlots = employeeObject.availability.filter(slot => slot.day == shiftDay);
+    console.log(employeeObject.firstName+"'s availability on this day is: "+availabilitySlots);
+  
+  // If array is empty, not available for that day
+    if (availabilitySlots.length == 0) return false;
+    available = availabilitySlots.some(slot => slot.startTime <= timeSlot.startTime && slot.endTime >= timeSlot.endTime);
+    return available;
+}
+
+timeSlotCheck = ( timeSlot ) => { 
+  return timeSlot.startTime < timeSlot.endTime;
+}
+
+overlapCheck = async ( employee, schedule, timeSlot ) => {
+  const shiftDay = timeSlot.day;
+  // Fetches shifts for the same employee on the same day
+  const scheduleObject = await Schedule.findById(schedule);
+  // console.log(scheduleObject);
+  const sameDayShifts = await scheduleObject.shifts.filter(shift => {
+    dayC = shift.timeSlot.day === shiftDay;
+    console.log("day: "+dayC);
+    employeeC = shift.employee == employee;
+    console.log("employee: "+employeeC);
+    return dayC && employeeC;
+  });
+  return sameDayShifts.length == 0;
+}
 
 module.exports = resolvers;

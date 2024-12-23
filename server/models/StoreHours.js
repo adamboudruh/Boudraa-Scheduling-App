@@ -8,7 +8,7 @@ const storeHoursSchema = new Schema({
       type: [timeSlotSchema],
       validate: {
         validator: (dayHours) => {
-          if (dayHours.length > 7 || sayHours.length < 0) return false;
+          if (dayHours.length > 7 || dayHours.length < 0) return false;
           const days = dayHours.map(d => d.day);
           return new Set(days).size === days.length;
         },

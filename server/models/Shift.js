@@ -10,22 +10,23 @@ const shiftSchema = new Schema({
   timeSlot: {
     type: timeSlotSchema,
     required: true,
-    validate: {
-        validator: async function(timeSlot) {
-          // Fetch store hours for the given manager and day
-          const storeHours = await StoreHours.findOne({ manager: this.manager });
-          // If no store hours for that day, then closed
-          if (!storeHours) return false;
+    // validate: {
+    //     validator: async function(timeSlot) {
+    //       // Fetch store hours for the given manager and day
+    //       console.log(this.manager)
+    //       const storeHours = await StoreHours.findOne({ manager: this.manager });
+    //       // If no store hours for that day, then closed
+    //       if (!storeHours) return false;
   
-          const hours = storeHours.dayHours.find(dayHour => dayHour.day === timeSlot.day);
-          if (!hours) return false;
+    //       const hours = storeHours.dayHours.find(dayHour => dayHour.day === timeSlot.day);
+    //       if (!hours) return false;
   
-          return timeSlot.startTime >= hours.openTime && timeSlot.endTime <= hours.closeTime;
+    //       return timeSlot.startTime >= hours.openTime && timeSlot.endTime <= hours.closeTime;
 
 
-        },
-        message: 'Shift time must be within store hours.'
-      }
+    //     },
+    //     message: 'Shift time must be within store hours.'
+    //   }
   },
   schedule: {
     type: Schema.Types.ObjectId,
@@ -45,20 +46,23 @@ const shiftSchema = new Schema({
     ref: 'employee',
     required: true
   }
-});
+}, { timestamps: true });
 
 // Checks if shift is within employee's availability
 shiftSchema.pre('save', async function(next) {
   const shiftDay = this.timeSlot.day;
    
-  const employee = await Employee.findById(this.employee._id) 
+  const employee = await Employee.findById(this.employee._id);
+  console.log("Adding shift for: "+employee.firstName);
   if (!employee) return next(new Error('Employee not found'));
 
   // Retrieves all the availability timeslots for that specific employee and puts in the array
   const availabilitySlots = employee.availability.filter(slot => slot.day == shiftDay);
+  console.log(employee.firstName+"'s availability on this day is: "+availabilitySlots);
   
   if (availabilitySlots.length > 0) { // If there is a timeslot for that day
-    available = availabilitySlots.some(slot => slot.startTime <= this.timeSlot.startTime && slot.endTime >= this.timeSlot.endTime)
+    available = availabilitySlots.some(slot => slot.startTime <= this.timeSlot.startTime && slot.endTime >= this.timeSlot.endTime);
+
     if (!available) {
       return next(new Error('Not within employee\'s availability'))
     }
@@ -66,6 +70,6 @@ shiftSchema.pre('save', async function(next) {
   } else return next(new Error('Not within employee\'s availability'))
 });
 
-const Shift = mongoose.model('shift', shiftSchema);
+// const Shift = mongoose.model('shift', shiftSchema);
 
 module.exports = shiftSchema;

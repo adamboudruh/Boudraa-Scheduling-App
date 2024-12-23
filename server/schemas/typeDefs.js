@@ -17,6 +17,7 @@ type User {
   schedules: [Schedule]
   employees: [Employee]
   departments: [Department]
+  roles: [Role]
 }
 
 type Department {
@@ -52,17 +53,16 @@ type Schedule {
 
 type Shift {
   _id: ID!
-  slot: TimeSlot!
+  timeSlot: TimeSlot!
   schedule: Schedule!
   employee: Employee!
   department: Department
   manager: User!
-  shiftLength: Float
 }
 
 type StoreHours {
   _id: ID!
-  hours: [TimeSlot]
+  dayHours: [TimeSlot]
   manager: User!
 }
 
@@ -81,6 +81,7 @@ type Auth {
 type Query {
   users: [User]
   user(id: ID!): User
+  userById(userId: ID!): User
   departments(userId: ID!): [Department]
   department(id: ID!): Department
   employees(userId: ID!): [Employee]
@@ -153,7 +154,7 @@ type Mutation {
   ): Role
 
   addSchedule(
-    weekOf: String!,
+    weekISO: String!,
     manager: ID!
   ): Schedule
 
@@ -162,7 +163,8 @@ type Mutation {
   ): Schedule
 
   addShift(
-    slot: TimeSlotInput,
+    timeSlot: TimeSlotInput!,
+    schedule: ID!,
     employee: ID!, 
     department: ID!
   ): Shift
@@ -178,16 +180,16 @@ type Mutation {
   deleteShift(
     schedule: ID!
     _id: ID!
-  ): Shift
+  ): Schedule
 
   addStoreHours(
-    hours: [TimeSlotInput]!, 
+    dayHours: [TimeSlotInput]!, 
     manager: ID!
   ): StoreHours
 
   updateStoreHours(
     _id: ID!, 
-    hours: [TimeSlotInput]
+    dayHours: [TimeSlotInput]
   ): StoreHours
 
   deleteStoreHours(

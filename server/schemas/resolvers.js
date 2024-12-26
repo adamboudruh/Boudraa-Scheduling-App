@@ -24,6 +24,10 @@ const dateScalar = new GraphQLScalarType({
   },
 })
 
+const availabilityError = new Error('Employee not available in the provided timeSlot');
+const invalidSlot = new Error('Invalid timeSlot');
+const shiftOverlap = new Error('Employee cannot work more than one shift per day');
+
 // Create custom resolvers for front-end display
 const resolvers = {
   Date: dateScalar,
@@ -160,6 +164,7 @@ const resolvers = {
   },
 
   Mutation: {
+    // Works
     addUser: async (parent, args) => {
       const user = await User.create(args);
       const token = signToken(user);
@@ -179,6 +184,7 @@ const resolvers = {
       return { token, user };
     },
 
+    // Works
     addDepartment: async (parent, { name, manager }) => {
       try {
         return await Department.create({ name, manager });
@@ -188,6 +194,7 @@ const resolvers = {
       }
     },
 
+    // Works
     deleteDepartment: async (parent, { _id }) => {
       try {
         return await Department.findOneAndDelete({ _id });
@@ -197,11 +204,14 @@ const resolvers = {
       }
     },
 
+    // Works
     addEmployee: async (parent, { firstName, lastName, wage, desiredHours, role, availability, manager }) => {
       try {
         console.log("Adding employee...");
-        console.log(`${firstName} ${lastName} ${wage} ${desiredHours} ${role} ${availability[0].day} ${manager} `)
-        return await Employee.create({ firstName, lastName, wage, desiredHours, role, availability, manager });
+        for (slot in availability) {   // Check validity of each timeSlot
+          if (!timeSlotCheck(slot)) throw invalidSlot;
+        }
+        return await Employee.create({ firstName, lastName, wage, desiredHours, role, availability, manager }, {new: true, runValidators: true});
       }
       catch (error) {
         console.error('Error adding employee:', error.message);
@@ -210,15 +220,27 @@ const resolvers = {
       }
     },
 
-    updateEmployee: async (parent, { _id, firstName, lastName, wage, desiredHours, role, availability, manager }) => {
+    // Works
+    updateEmployee: async (parent, args) => {
       try {
-        return await Employee.findOneAndUpdate({ _id }, { firstName, lastName, wage, desiredHours, role, availability, manager });
+        const {_id, availability, ...otherFields} = args;
+        console.log(availability.length);
+        if (availability) {        // Check validity of each timeSlot if included in args
+          for (i = 0; i < availability.length; i++) {
+            console.log(`${availability[i].startTime} vs. ${availability[i].endTime}`);
+            console.log(timeSlotCheck(availability[i]));
+            if (!timeSlotCheck(availability[i])) throw invalidSlot;
+            else return await Employee.findOneAndUpdate({ _id }, {$set: otherFields, availability}, {new: true, runValidators: true});
+          }
+        }
+        return await Employee.findOneAndUpdate({ _id }, {$set: otherFields});
       }
       catch (error) {
-        throw new Error('Error updating employee info ' , error.message);
+        throw new Error('Error updating employee info: ' + error.message);
       }
     },
 
+    // Works
     deleteEmployee: async (parent, { _id }) => {
       try {
         return await Employee.findOneAndDelete({ _id });
@@ -228,6 +250,7 @@ const resolvers = {
       }
     },
 
+    // Works
     addRole: async (parent, { name, description, manager }) => {
       try {
         return await Role.create({ name, description, manager });
@@ -237,6 +260,7 @@ const resolvers = {
       }
     },
 
+    // Works
     deleteRole: async (parent, { _id }) => {
       try {
         return await Role.findOneAndDelete({ _id });
@@ -246,7 +270,7 @@ const resolvers = {
       }
     },
 
-    // weekOf will be an ISO string
+    // Works
     addSchedule: async (parent, { weekISO, manager }) => {
       try {
         shifts = []
@@ -262,6 +286,7 @@ const resolvers = {
       }
     },
 
+    // Works
     deleteSchedule: async (parent, { _id }) => {
       try {
         return await Schedule.findOneAndDelete({ _id });
@@ -271,23 +296,21 @@ const resolvers = {
       }
     },
 
+    // Works
     addShift: async (parent, { timeSlot, schedule, employee, department }) => {
       try {
-        availabilityError = new Error('Employee not available in the provided timeSlot');
-        invalidSlot = new Error('Invalid timeSlot');
-        shiftOverlap = new Error('Employee cannot work more than one shift per day');
+        console.log("New timeslot: "+timeSlot);
+      // Check if within employee availability
+        if (await availabilityCheck(employee, timeSlot)) console.log("Employee available yayyy");
+        else throw availabilityError;
+      // Check valid timeslot
+        if (await timeSlotCheck(timeSlot)) console.log("Valid timeslot. Booyah!");
+        else throw invalidSlot;
+      // Check if shift overlaps
+        if (await overlapCheck(employee, schedule, timeSlot)) console.log("No overlaps, nicely done");
+        else throw shiftOverlap;
 
-        // Check if employee is available
-          if (await availabilityCheck(employee, timeSlot)) console.log("Employee available yayyy");
-          else throw availabilityError;
-        // Check valid timeslot
-          if (await timeSlotCheck(timeSlot)) console.log("Valid timeslot. Booyah!");
-          else throw invalidSlot;
-        // Check if shift overlaps
-          if (await overlapCheck(employee, schedule, timeSlot)) console.log("No overlaps, nicely done");
-          else throw shiftOverlap;
-
-        schedule = await Schedule.findOneAndUpdate(
+        const updatedSchedule = await Schedule.findOneAndUpdate(
           { _id: schedule },
           { $addToSet: { 
             shifts: { 
@@ -296,30 +319,42 @@ const resolvers = {
           { new: true, }
         );
         // Return shift that was just created from the shifts array within the schedule
-        return schedule.shifts[schedule.shifts.length - 1];
+        console.log(updatedSchedule);
+        return updatedSchedule.shifts[updatedSchedule.shifts.length - 1];
       }
       catch (error) {
         throw new Error('Error adding shift: '+error.message);
       }
     },
 
-    updateShift: async (parent, { slot, _id , schedule, employee, department }) => {
+    // Works
+    updateShift: async (parent, { timeSlot, _id , schedule, employee, department }) => {
       try {
-        // This one I have to think about. How do I handle the TimeSlotInput, because the frontend can't like make a timeslot object, all it can do is feed me a start and end Time.
-        return Schedule.findOneAndUpdate(
+        // Check if within employee availability
+          if (await availabilityCheck(employee, timeSlot)) console.log("Employee available yayyy");
+          else throw availabilityError;
+        // Check valid timeslot
+          if (await timeSlotCheck(timeSlot)) console.log("Valid timeslot. Booyah!");
+          else throw invalidSlot;
+
+        const updatedSchedule = await Schedule.findOneAndUpdate(
           { _id: schedule, "shifts._id": _id },
-          { $addToSet: { 
-            shifts: { 
-              slot, schedule, employee, department
-            } }, },
+          { $set: { 
+              "shifts.$.timeSlot": timeSlot,
+              "shifts.$.department": department,
+              "shifts.$.employee": employee,
+            }, },
           { new: true, }
-        );
+        ).populate('shifts.employee');
+
+        return updatedSchedule.shifts.filter(shift => shift._id == _id)[0];
       }
       catch (error) {
-        throw new Error('Error updating shift');
+        throw new Error('Error updating shift: '+error.message);
       }
     },
 
+    // Works
     deleteShift: async (parent, { schedule, _id }) => {
       try {
         return await Schedule.findOneAndUpdate(
@@ -332,6 +367,7 @@ const resolvers = {
       }
     },
 
+    // Works
     addStoreHours: async (parent, { dayHours, manager }) => {
       try {
         return await StoreHours.create({ dayHours, manager });
@@ -343,15 +379,7 @@ const resolvers = {
       }
     },
 
-    // updateStoreHours: async (parent, { _id, dayHours }) => {
-    //   try {
-    //     return await StoreHours.findOneAndUpdate({ _id }, { dayHours });
-    //   }
-    //   catch (error) {
-    //     throw new Error('Error adding employee');
-    //   }
-    // },
-
+    // Works
     deleteStoreHours: async (parent, { _id }) => {
       try {
         return await StoreHours.findOneAndDelete({ _id });

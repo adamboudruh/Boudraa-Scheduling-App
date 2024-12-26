@@ -169,7 +169,7 @@ type Mutation {
 
   updateShift(
     _id: ID!, 
-    slot: TimeSlotInput, 
+    timeSlot: TimeSlotInput, 
     schedule: ID, 
     employee: ID, 
     department: ID
